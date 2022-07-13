@@ -18,6 +18,12 @@ options = odeset('RelTol',1e-12,'AbsTol',1e-12*ones(1,n));
 % noise 
 % x = x + rand(size(x))*0.1; 
 
+% smooth w/ gauss process 
+% gprMdl = fitrgp(t, x, 'Basis','linear',...
+%       'FitMethod','exact','PredictMethod','exact'); 
+
+% x = resubPredict(gprMdl);
+
 %% Compute Derivative
 
 % truth dynamics
@@ -34,24 +40,28 @@ if diff_option == 1
     % forwards difference 
     for i = 1:length(x) 
         if ~isequal(i, length(x))
-            dx_b(i,:) = ( x(i+1,:) - x(i,:) ) / dt; 
+            dx_f(i,:) = ( x(i+1,:) - x(i,:) ) / dt; 
         else
-            dx_b(i,:) = ( x(i,:) - x(i-1,:) ) / dt; 
+            dx_f(i,:) = ( x(i,:) - x(i-1,:) ) / dt; 
         end 
-    end     
+    end    
+    
+    dx = dx_f; 
     
 elseif diff_option == 2
 
     % central difference 
     for i = 1:length(x) 
         if i == 1
-            dx_b(i,:) = ( x(i+1,:) - x(i,:) ) / dt; 
+            dx_c(i,:) = ( x(i+1,:) - x(i,:) ) / dt; 
         elseif i == length(x)
-            dx_b(i,:) = ( x(i,:) - x(i-1,:) ) / dt;             
+            dx_c(i,:) = ( x(i,:) - x(i-1,:) ) / dt;             
         else
-            dx_b(i,:) = ( x(i+1,:) - x(i-1,:) ) / (2*dt); 
+            dx_c(i,:) = ( x(i+1,:) - x(i-1,:) ) / (2*dt); 
         end 
     end 
+    
+    dx = dx_c; 
     
 else
     
@@ -64,12 +74,14 @@ else
         end 
     end 
     
+    dx = dx_b; 
+    
 end 
 
-figure()
-plot(t, dx_a, t, dx_b, '--', 'linewidth', 2)
-
-dx = dx_b; 
+% figure()
+% plot(t, dx_a, t, dx_b, '--', 'linewidth', 2)
+% 
+% dx = dx_c; 
 
 %% Build library and compute sparse regression
 
